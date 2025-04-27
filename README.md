@@ -62,7 +62,6 @@ Este projeto foi estruturado com foco em modularidade, escalabilidade e seguran�
 
 ---
 
-
 ### 🔐 Segurança
 
 - Acesso controlado com fluxo de aprovação
@@ -70,7 +69,6 @@ Este projeto foi estruturado com foco em modularidade, escalabilidade e seguran�
 - Proteção de todos os endpoints via `Depends(get_current_user)`
 
 ---
-
 
 ## 🧱 Estrutura das Tabelas
 
