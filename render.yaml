@@ -2,7 +2,7 @@
 
 services:
   - type: web                  # tipo de serviço no Render
-    name: iris-fastapi         # nome que aparecerá no dashboard
+    name: tech-challenge1      # nome que aparecerá no dashboard
     env: python                # runtime Python
     region: oregon             # data center (ex: oregon, frankfurt, ireland…)
     branch: main               # branch que dispara o build/deploy
