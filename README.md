@@ -205,7 +205,7 @@ Para rodar esta API localmente, você precisará dos seguintes itens instalados:
 1. Clone o repositório:
    ```bash
    git clone https://github.com/carlosvblessa/techchallenge1.git
-   cd api_modelo_fast
+   cd techchallenge1
    ```
 
 2. Crie e ative o ambiente virtual:
