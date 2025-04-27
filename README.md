@@ -3,7 +3,7 @@
 
 API desenvolvida com FastAPI para consultar dados públicos de vitivinicultura da Embrapa. Esta API servirá como base de ingestão de dados para um futuro modelo de Machine Learning.
 
-O projeto está disponibilizado no Render através do endereço: https://techchallenge-ai7z.onrender.com/docs#/
+O projeto está disponibilizado no Render através do endereço: https://tech-challenge1-kqz9.onrender.com/docs/
 
 # Estrutura do projeto
 ```
