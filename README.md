@@ -5,13 +5,14 @@ API desenvolvida com FastAPI para consultar dados públicos de vitivinicultura d
 
 O projeto está disponibilizado no Render através do endereço: https://tech-challenge1-kqz9.onrender.com/docs/
 
-# Estrutura do projeto
+## Estrutura do projeto
+
 ```
 
 techchallenge1/
 ├── app
 │   ├── analytics.py                  # Endpoints para análises futuras (ex: previsão, tendências)
-│   ├── auth.py
+│   ├── auth.py                       # Gerenciamento de autenticação de usuários
 │   ├── auth_token.py                 # Validação de tokens JWT para proteger endpoints
 │   ├── config.py                     # Configurações globais da aplicação (secret key, expiração, etc.)
 │   ├── database.py                   # Inicialização do SQLAlchemy e conexão com SQLite
@@ -23,8 +24,8 @@ techchallenge1/
 │   ├── scraper_import_export.py      # Scraper específico para importações e exportações
 │   ├── scraper.py                    # Scraper principal para produção, comercialização, processamento
 │   └── utils.py                      # Funções auxiliares como criação e validação de tokens JWT
-├── dados_embrapa.db
-├── LICENSE
+├── dados_embrapa.db                  # Base de dados SQLite com os dados coletados
+├── LICENSE                           # Licença do projeto (MIT)
 ├── main.py                           # Comandos de inicialização do projeto
 ├── render.yaml                       # Parâmetros de inicialização para o render
 ├── README.md                         # Instruções do projeto
