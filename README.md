@@ -16,6 +16,7 @@ techchallenge1/
 │   ├── auth_token.py                 # Validação de tokens JWT para proteger endpoints
 │   ├── config.py                     # Configurações globais da aplicação (secret key, expiração, etc.)
 │   ├── database.py                   # Inicialização do SQLAlchemy e conexão com SQLite
+│   ├── schema.py                     # Define os modelos Pydantic para validação e serialização de dados
 │   ├── __init__.py                   # Inicializador do pacote
 │   ├── models.py                     # Modelos de dados SQLAlchemy (produção, comercialização, etc.)
 │   ├── models_usuario.py             # Modelo de dados SQLAlchemy específico para usuários

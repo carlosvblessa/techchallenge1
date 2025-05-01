@@ -47,7 +47,7 @@ def fetch_dados_embrapa(tipo: str):
         arquivo = matches[0]
         url_download = DOWNLOAD_BASE + arquivo["href"]
         file_response = requests.get(url_download)
-        df = pd.read_csv(StringIO(file_response.content.decode("latin1")), sep=";")
+        df = pd.read_csv(StringIO(file_response.content.decode("utf-8-sig")), sep=";")
         df.columns = [col.strip() for col in df.columns]
 
         if tipo in ["producao", "comercializacao"]:

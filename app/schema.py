@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Literal, Optional
+from pydantic import BaseModel, HttpUrl
+from typing import Literal, Optional, List
 
 # Schemas Pydantic
 class HealthResponse(BaseModel):
@@ -14,13 +14,23 @@ class ProducaoItem(BaseModel):
     ano: int
     producao_toneladas: float
 
+class ProducaoResponse(BaseModel):
+    arquivo: str
+    url_download: HttpUrl
+    registros: List[ProducaoItem]
+
 class ComercializacaoItem(BaseModel):
     id: int
     id_original: int
-    control: str
+    control: Optional[str] = None
     produto: str
     ano: int
     volume_comercializado: float
+
+class ComercializacaoResponse(BaseModel):
+    arquivo: str
+    url_download: HttpUrl
+    registros: List[ComercializacaoItem]
 
 class ProcessamentoItem(BaseModel):
     id: int
@@ -30,6 +40,11 @@ class ProcessamentoItem(BaseModel):
     ano: int
     volume_processado_litros: float
 
+class ProcessamentoResponse(BaseModel):
+    arquivo: str
+    url_download: HttpUrl
+    registros: List[ProcessamentoItem]
+
 class ImportacaoItem(BaseModel):
     id: int
     pais: str
@@ -37,12 +52,24 @@ class ImportacaoItem(BaseModel):
     quantidade: float
     valor_usd: float
 
+class ImportacaoResponse(BaseModel):
+    arquivo: str
+    url_download: HttpUrl
+    registros: List[ImportacaoItem]
+
+
 class ExportacaoItem(BaseModel):
     id: int
     pais: str
     ano: int
     quantidade: float
     valor_usd: float
+
+class ExportacaoResponse(BaseModel):
+    arquivo: str
+    url_download: HttpUrl
+    registros: List[ExportacaoItem]
+
 
 class SolicitarAcessoRequest(BaseModel):
     username: str

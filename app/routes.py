@@ -1,14 +1,20 @@
 import datetime
 from typing import List
 from fastapi import APIRouter, Depends, Request, HTTPException, status
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from app.scraper import fetch_dados_embrapa
 from app.scraper_import_export import fetch_dados_import_export
 from app.auth import router as auth_router
 from app.auth_token import get_current_user
 from app.analytics import router as analytics_router
 from app.database import engine
-from app.schema import ProducaoItem, ProcessamentoItem, ComercializacaoItem, ImportacaoItem, ExportacaoItem, HealthResponse
+from app.schema import (
+    ProducaoResponse,
+    ProcessamentoResponse,
+    ComercializacaoResponse,
+    ImportacaoResponse,
+    ExportacaoResponse,
+    HealthResponse)
 
 router = APIRouter()
 
@@ -18,47 +24,58 @@ router.include_router(auth_router)
 # Endpoints protegidos por JWT
 @router.get(
     "/producao",
-    response_model=List[ProducaoItem],
+    response_model=ProducaoResponse,
     summary="Extrai dados de produção",
     tags=["Scraper"],
     responses={503: {"description": "Serviço indisponível"}}
 )
 def producao(usuario: str = Depends(get_current_user)):
     """
-    Extrai os dados históricos de produção vitivinícola do Brasil diretamente do site da Embrapa.
-
-    - Realiza scraping do arquivo mais recente disponível.
-    - Persiste os dados no banco SQLite, evitando duplicações.
-    - Retorna os 100 primeiros registros processados como exemplo.
-
-    🔒 É necessário um token JWT válido para acessar este endpoint.
+    Extrai dados históricos de produção vitivinícola do Brasil via scraping no site da Embrapa.
+    - Retorna dados processados com base na estrutura definida no modelo `ProducaoResponse`.
+    - Trata falhas de conexão e erros internos com respostas HTTP 503.
     """
     try:
         data = fetch_dados_embrapa("producao")
         
-        # Se o scraper retornar um dict com erro, converte para HTTPException 503
+        # Verifica se o retorno é um dicionário com erro (ex: site fora do ar)
         if isinstance(data, dict) and "erro" in data:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=data["erro"]
             )
         
-        return data
+        # Transforma os dados para corresponder ao modelo Pydantic
+        registros_mapeados = []
+        for item in data["registros"]:
+            registros_mapeados.append({
+                "id": item["id"],
+                "id_original": item.get("id_original", item["id"]),  # Fallback para 'id'
+                "control": item["control"],
+                "produto": item["produto"],
+                "ano": item["ano"],
+                "producao_toneladas": float(item["quantidade"])  # Converte para float
+            })
+        
+        return {
+            "arquivo": data["arquivo"],
+            "url_download": data["url_download"],
+            "registros": registros_mapeados
+        }
     
-    except HTTPException as http_err:
-        # Repassa HTTPExceptions (como o 503 acima)
-        raise http_err
-    
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        # Qualquer outra falha gera um 503 com detalhe do erro
+        # Captura todas as outras exceções e converte para 503
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(e)
         )
     
+
 @router.get(
     "/comercializacao",
-    response_model=List[ComercializacaoItem],
+    response_model=ComercializacaoResponse,
     summary="Extrai dados de comercialização",
     tags=["Scraper"],
     responses={503: {"description": "Serviço indisponível"}}
@@ -66,37 +83,52 @@ def producao(usuario: str = Depends(get_current_user)):
 def comercializacao(usuario: str = Depends(get_current_user)):
     """
     Retorna dados de comercialização de uvas e derivados no Brasil, conforme publicações da Embrapa.
-
     - Inclui histórico de volumes por produto e ano.
     - Evita duplicidade na base de dados.
     - Retorna amostra com até 100 registros.
-
     🔒 É necessário um token JWT válido para acessar este endpoint.
     """
     try:
         data = fetch_dados_embrapa("comercializacao")
         
+        # Verifica se o retorno é um dicionário com erro (ex: site fora do ar)
         if isinstance(data, dict) and "erro" in data:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=data["erro"]
             )
-            
-        return data
         
-    except HTTPException as http_err:
-        raise http_err
+        # Transforma os dados para corresponder ao modelo Pydantic
+        registros_mapeados = []
+        for item in data["registros"]:
+            registros_mapeados.append({
+                "id": item["id"],
+                "id_original": item.get("id_original", item["id"]),  # Fallback para 'id'
+                "control": item["control"],
+                "produto": item["Produto"],
+                "ano": item["ano"],
+                "volume_comercializado": float(item["quantidade"])  # Converte para float
+            })
         
+        return {
+            "arquivo": data["arquivo"],
+            "url_download": data["url_download"],
+            "registros": registros_mapeados
+        }
+    
+    except HTTPException as he:
+        raise he
     except Exception as e:
+        # Captura todas as outras exceções e converte para 503
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(e)
         )
-
-
+    
+    
 @router.get(
     "/processamento",
-    response_model=List[ProcessamentoItem],
+    response_model=ProcessamentoResponse,
     summary="Extrai dados de processamento",
     tags=["Scraper"],
     responses={503: {"description": "Serviço indisponível"}}
@@ -104,10 +136,8 @@ def comercializacao(usuario: str = Depends(get_current_user)):
 def processamento(usuario: str = Depends(get_current_user)):
     """
     Consulta os dados de processamento de uvas por cultivar no Brasil, extraídos da base da Embrapa.
-
     - O sistema coleta o arquivo `ProcessaViniferas.csv` e transforma em estrutura relacional.
     - Cada linha representa o volume processado por ano e variedade.
-
     🔒 É necessário um token JWT válido para acessar este endpoint.
     """
     try:
@@ -118,8 +148,24 @@ def processamento(usuario: str = Depends(get_current_user)):
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=data["erro"]
             )
-            
-        return data
+        
+        # Transforma dados para o modelo esperado
+        registros_mapeados = []
+        for item in data["registros"]:
+            registros_mapeados.append({
+                "id": item["id"],
+                "id_original": item.get("id_original", item["id"]),
+                "control": item["control"],
+                "cultivar": item["cultivar"],
+                "ano": item["ano"],
+                "volume_processado_litros": float(item["quantidade"])
+            })
+        
+        return {
+            "arquivo": data["arquivo"],
+            "url_download": data["url_download"],
+            "registros": registros_mapeados
+        }
         
     except HTTPException as http_err:
         raise http_err
@@ -133,7 +179,7 @@ def processamento(usuario: str = Depends(get_current_user)):
 
 @router.get(
     "/importacao",
-    response_model=List[ImportacaoItem],
+    response_model=ImportacaoResponse,
     summary="Extrai dados de importação",
     tags=["Scraper"],
     responses={503: {"description": "Serviço indisponível"}}
@@ -141,37 +187,47 @@ def processamento(usuario: str = Depends(get_current_user)):
 def importacao(usuario: str = Depends(get_current_user)):
     """
     Apresenta os dados de importação de vinhos por país e por ano, conforme informações da Embrapa.
-
     - Inclui quantidade e valor em dólares por país.
     - Realiza parsing de arquivos com colunas duplicadas por ano.
     - Persistência controlada por `pais` e `ano`.
-
     🔒 É necessário um token JWT válido para acessar este endpoint.
     """
     try:
         data = fetch_dados_import_export("importacao")
         
         if isinstance(data, dict) and "erro" in data:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=data["erro"]
-            )
-            
-        return data
+            raise HTTPException(status_code=503, detail=data["erro"])
         
-    except HTTPException as http_err:
-        raise http_err
+        registros_mapeados = []
+        for item in data["registros"]:
+            registros_mapeados.append({
+                "id": item.get("id"),
+                "pais": item.get("pais"),
+                "ano": item.get("ano"),
+                "quantidade": float(item.get("quantidade")),
+                "valor_usd": float(item.get("valor_usd"))
+            })
         
+        return {
+            "arquivo": data.get("arquivo", "N/A"),
+            "url_download": data.get("url_download", "http://vitibrasil.cnpuv.embrapa.br"),
+            "registros": registros_mapeados
+        }
+        
+    except KeyError as ke:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Campo ausente nos dados: {str(ke)}"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(e)
         )
 
-
 @router.get(
     "/exportacao",
-    response_model=List[ExportacaoItem],    
+    response_model=ExportacaoResponse,
     summary="Extrai dados de exportação",
     tags=["Scraper"],
     responses={503: {"description": "Serviço indisponível"}}
@@ -179,10 +235,8 @@ def importacao(usuario: str = Depends(get_current_user)):
 def exportacao(usuario: str = Depends(get_current_user)):
     """
     Exibe os dados de exportação de vinhos por país, consolidados pela Embrapa ao longo dos anos.
-
     - O endpoint carrega o arquivo `expvinho.csv` e trata valores em `quantidade` e `USD`.
     - Cada país aparece com o respectivo volume exportado por ano.
-
     🔒 Este endpoint só pode ser acessado por usuários autenticados com JWT.
     """
     try:
@@ -193,8 +247,23 @@ def exportacao(usuario: str = Depends(get_current_user)):
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=data["erro"]
             )
-            
-        return data
+        
+        # Transforma dados para o modelo esperado
+        registros_mapeados = []
+        for item in data["registros"]:
+            registros_mapeados.append({
+                "id": item["Id"],
+                "pais": item["pais"],
+                "ano": item["ano"],
+                "quantidade": float(item["quantidade"]),
+                "valor_usd": float(item["USD"])
+            })
+        
+        return {
+            "arquivo": data["arquivo"],
+            "url_download": data["url_download"],
+            "registros": registros_mapeados
+        }
         
     except HTTPException as http_err:
         raise http_err

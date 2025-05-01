@@ -37,10 +37,20 @@ def fetch_dados_import_export(tipo: str):
         url_download = DOWNLOAD_BASE + arquivos[0]["href"]
         file_response = requests.get(url_download)
 
-        df = pd.read_csv(StringIO(file_response.content.decode("latin1")), sep="\t")
-        df.columns = [str(c).strip() for c in df.columns]
+        # Lê o CSV com codificação correta
+        df = pd.read_csv(StringIO(file_response.content.decode("utf-8-sig")), sep="\t")
+        
+        # Renomeia colunas para alinhar com o modelo Pydantic
+        df.rename(columns={"Id": "id", "País": "pais"}, inplace=True)
+        df.columns = [col.lower() for col in df.columns]  # Garante minúsculas
+        df["id"] = df["id"].astype(int)
+
+        # Valida colunas críticas
+        if "id" not in df.columns:
+            return {"erro": "Coluna 'id' não encontrada no CSV"}
 
         registros = processar_tabela_ano_duplo(df, tipo)
+        
         return {
             "arquivo": arquivos[0].text.strip(),
             "url_download": url_download,
@@ -49,6 +59,7 @@ def fetch_dados_import_export(tipo: str):
 
     except Exception as e:
         return {"erro": str(e)}
+    
 
 def processar_tabela_ano_duplo(df: pd.DataFrame, tipo: str):
     try:
