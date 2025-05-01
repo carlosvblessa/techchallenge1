@@ -19,8 +19,7 @@ techchallenge1/
 │   ├── __init__.py                   # Inicializador do pacote
 │   ├── models.py                     # Modelos de dados SQLAlchemy (produção, comercialização, etc.)
 │   ├── models_usuario.py             # Modelo de dados SQLAlchemy específico para usuários
-│   ├── routes_analytics_integrado.py # Versão completa incluindo endpoints analíticos
-│   ├── routes.py                     # Organização principal dos endpoints e routers
+│   ├── routes.py                     # Organização principal dos endpoints e routers, inclui os endpoints analíticos
 │   ├── scraper_import_export.py      # Scraper específico para importações e exportações
 │   ├── scraper.py                    # Scraper principal para produção, comercialização, processamento
 │   └── utils.py                      # Funções auxiliares como criação e validação de tokens JWT
@@ -60,6 +59,27 @@ Este projeto foi estruturado com foco em modularidade, escalabilidade e seguran�
            v
   (5) Acesso com autenticação via JWT + aprovação por admin
 ```
+
+
+---
+
+### 🚀 Endpoints atuais
+
+| Método | Rota                          | Descrição                                                       |
+|:-------|:------------------------------|:----------------------------------------------------------------|
+| **GET**    | `/`                          | Página inicial em HTML                                          |
+| **GET**    | `/health`                    | Health-check da API e do banco                                  |
+| **GET**    | `/producao`                  | Extrai dados de produção 🔒                                      |
+| **GET**    | `/comercializacao`           | Extrai dados de comercialização 🔒                               |
+| **GET**    | `/processamento`             | Extrai dados de processamento 🔒                                 |
+| **GET**    | `/importacao`                | Extrai dados de importação 🔒                                   |
+| **GET**    | `/exportacao`                | Extrai dados de exportação 🔒                                   |
+| **POST**   | `/solicitar-acesso`          | Solicita cadastro de novo usuário                               |
+| **POST**   | `/avaliar-acesso`            | Admin: aprova ou rejeita solicitação de acesso                  |
+| **POST**   | `/status-acesso`             | Verifica status da solicitação de acesso                        |
+| **POST**   | `/solicitacoes-pendentes`    | Admin: lista todos os pedidos de acesso ainda não avaliados     |
+
+---
 
 ---
 
@@ -222,6 +242,17 @@ Para rodar esta API localmente, você precisará dos seguintes itens instalados:
 4. Execute a API:
    ```bash
    gunicorn main:app --reload -k uvicorn.workers.UvicornWorker -b 127.0.0.1:10000
+   ```
+
+5. Verifique o status:
+   ```bash
+   curl http://127.0.0.1:10000/health
+   ```
+
+6. Acesse a documentação Swagger ou Redoc:
+   ```bash
+   http://127.0.0.1:10000/docs
+   http://127.0.0.1:10000/redoc
    ```
 
 A API estará disponível em `http://127.0.0.1:10000`.

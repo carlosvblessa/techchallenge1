@@ -2,7 +2,11 @@ from fastapi import APIRouter, Query
 
 router = APIRouter()
 
-@router.get("/producao/previsao", summary="Previsão futura da produção de uvas")
+@router.get(
+    "/producao/previsao",
+    summary="Previsão futura da produção de uvas",
+    tags=["Funcionalidades planejadas"]
+)
 def prever_producao(anos: int = Query(5, ge=1, le=20)):
     """
     Estima a produção de uvas para os próximos anos com base em dados históricos.
@@ -17,7 +21,12 @@ def prever_producao(anos: int = Query(5, ge=1, le=20)):
     """
     return {"em_desenvolvimento": True}
 
-@router.get("/exportacao/tendencias", summary="Análise de tendências de exportação por país")
+
+@router.get(
+    "/exportacao/tendencias",
+    summary="Análise de tendências de exportação por país",
+    tags=["Funcionalidades planejadas"]
+)
 def analisar_tendencia_exportacao(pais: str = Query(..., min_length=2)):
     """
     Analisa o comportamento das exportações para determinado país.
@@ -32,7 +41,12 @@ def analisar_tendencia_exportacao(pais: str = Query(..., min_length=2)):
     """
     return {"em_desenvolvimento": True}
 
-@router.get("/comercializacao/ranking-regioes", summary="Ranking de regiões por comercialização")
+
+@router.get(
+    "/comercializacao/ranking-regioes",
+    summary="Ranking de regiões por comercialização",
+    tags=["Funcionalidades planejadas"]
+)
 def ranking_regioes(ano: int = Query(..., ge=1970, le=2100)):
     """
     Lista as regiões com maior volume comercializado em um ano específico.
@@ -47,7 +61,12 @@ def ranking_regioes(ano: int = Query(..., ge=1970, le=2100)):
     """
     return {"em_desenvolvimento": True}
 
-@router.get("/importacao/alerta-estoque", summary="Recomendação de estoque para vinícolas")
+
+@router.get(
+    "/importacao/alerta-estoque",
+    summary="Recomendação de estoque para vinícolas",
+    tags=["Funcionalidades planejadas"]
+)
 def alerta_estoque(produto: str = Query(..., min_length=3)):
     """
     Gera recomendações de ajuste de estoque com base nas tendências de importação.
