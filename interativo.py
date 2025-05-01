@@ -1,10 +1,3 @@
-# %% [markdown]
-# # Processamento Interativo de Dados Vitibrasil
-
-# %% [markdown]
-# ## Etapa 1: Configurações Iniciais
-
-# %%
 import pandas as pd
 import numpy as np
 from sqlalchemy.exc import IntegrityError
@@ -17,11 +10,6 @@ TIPO = "importacao"  # ou "exportacao"
 ARQUIVO_CSV = "ImpVinhos.csv" if TIPO == "importacao" else "expvinho.csv"
 CAMINHO_CSV = os.path.expanduser(f"~/Downloads/{ARQUIVO_CSV}")
 
-# %% [markdown]
-# ## Etapa 2: Carregamento do CSV Local
-
-# %%
-# Carregar CSV com codificação correta
 try:
     df = pd.read_csv(CAMINHO_CSV, sep="\t", encoding="utf-8-sig")
     print(f"✅ Arquivo {ARQUIVO_CSV} carregado com sucesso!")
@@ -64,7 +52,7 @@ df_long = df_long.replace([np.inf, -np.inf], np.nan).dropna()
 df_long[["quantidade", "valor_usd"]] = df_long[["quantidade", "valor_usd"]].astype(float)
 
 print(f"\n📊 Total de registros processados: {len(df_long)}")
-display(df_long.head())
+print(df_long.head())
 
 # %% [markdown]
 # ## Etapa 4: Salvamento no Banco de Dados
