@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, status, Body
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordRequestForm
 from app.database import SessionLocal
 from app.models_usuario import Usuario
@@ -93,7 +93,7 @@ def avaliar_acesso(
     if data.status_aprovacao == "aprovado":
         token = create_access_token(data={"sub": usuario.username})
         usuario.ultimo_token = token
-        usuario.data_token = datetime.utcnow()
+        usuario.data_token = datetime.now(timezone.utc)
     db.commit()
 
     return {"mensagem": f"Usuário {data.username} foi {data.status_aprovacao}."}
@@ -131,12 +131,15 @@ def status_acesso(
         return {"status": "rejeitado", "mensagem": "Sua solicitação foi recusada."}
 
     # aprovado
+    # Converte data_token para UTC-aware se for naive
+    if usuario.data_token and usuario.data_token.tzinfo is None:
+        usuario.data_token = usuario.data_token.replace(tzinfo=timezone.utc)
     # valida se precisa renovar token
     expires = usuario.data_token + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    if not usuario.ultimo_token or expires < datetime.utcnow():
+    if not usuario.ultimo_token or expires < datetime.now(timezone.utc):
         token = create_access_token(data={"sub": usuario.username})
         usuario.ultimo_token = token
-        usuario.data_token = datetime.utcnow()
+        usuario.data_token = datetime.now(timezone.utc)
         db.commit()
 
     return {
