@@ -5,7 +5,7 @@ services:
     name: tech-challenge1      # nome que aparecerá no dashboard
     env: python                # runtime Python
     region: oregon             # data center (ex: oregon, frankfurt, ireland…)
-    branch: main               # branch que dispara o build/deploy
+    branch: issue_7            # branch que dispara o build/deploy
     plan: free                 # plano de recurso (free, starter, pro…)
     healthCheckPath: "/health" # endpoint para health checks
     buildCommand: |            # comandos para instalar dependências
