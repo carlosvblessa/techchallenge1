@@ -7,6 +7,7 @@ from app.models_usuario import Usuario
 from app.utils import create_access_token, verify_token
 from app.config import settings
 from typing import List
+import bcrypt
 from app.schema import (
     SolicitarAcessoRequest,
     MessageResponse,
@@ -51,7 +52,14 @@ def solicitar_acesso(
     existing = db.query(Usuario).filter_by(username=data.username).first()
     if existing:
         raise HTTPException(status_code=400, detail="Usuário já solicitou acesso.")
-    novo = Usuario(username=data.username, senha=data.password, status="pendente")
+    
+    salt   = bcrypt.gensalt(rounds=12, prefix=b"2a")
+    #hashed = bcrypt.hashpw(data['password'].encode('utf-8'), salt)
+    hashed = bcrypt.hashpw(data.password.encode('utf-8'), salt)
+    
+    novo = Usuario(username=data.username,
+                   senha=hashed.decode('utf-8'),
+                   status="pendente")
     db.add(novo)
     db.commit()
     return {"mensagem": "Solicitação de acesso registrada. Aguarde avaliação."}
@@ -121,7 +129,11 @@ def status_acesso(
     - `password`: senha informada na solicitação
     """
     usuario = db.query(Usuario).filter_by(username=form.username).first()
-    if not usuario or usuario.senha != form.password:
+    
+    if not usuario or not bcrypt.checkpw(
+        form.password.encode('utf-8'),
+        usuario.senha.encode('utf-8')
+    ):
         raise HTTPException(status_code=401, detail="Credenciais inválidas.")
 
     if usuario.status == "pendente":

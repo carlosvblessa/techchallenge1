@@ -9,3 +9,4 @@ SQLAlchemy==2.0.40
 Unidecode==1.4.0
 uvicorn==0.34.2
 gunicorn==23.0.0
+bcrypt==4.3.0
