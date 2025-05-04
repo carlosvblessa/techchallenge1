@@ -201,16 +201,16 @@ def importacao(usuario: str = Depends(get_current_user)):
         registros_mapeados = []
         for item in data["registros"]:
             registros_mapeados.append({
-                "id": item.get("id"),
-                "pais": item.get("pais"),
-                "ano": item.get("ano"),
-                "quantidade": float(item.get("quantidade")),
-                "valor_usd": float(item.get("valor_usd"))
+                "id": item["id"],
+                "pais": item["pais"],
+                "ano": item["ano"],
+                "quantidade": float(item["quantidade"]),
+                "valor_usd": float(item["valor_usd"])
             })
         
         return {
-            "arquivo": data.get("arquivo", "N/A"),
-            "url_download": data.get("url_download", "http://vitibrasil.cnpuv.embrapa.br"),
+            "arquivo": data["arquivo"],
+            "url_download": data["url_download"],
             "registros": registros_mapeados
         }
         
@@ -252,11 +252,11 @@ def exportacao(usuario: str = Depends(get_current_user)):
         registros_mapeados = []
         for item in data["registros"]:
             registros_mapeados.append({
-                "id": item["Id"],
+                "id": item["id"],
                 "pais": item["pais"],
                 "ano": item["ano"],
                 "quantidade": float(item["quantidade"]),
-                "valor_usd": float(item["USD"])
+                "valor_usd": float(item["valor_usd"])
             })
         
         return {
@@ -265,9 +265,11 @@ def exportacao(usuario: str = Depends(get_current_user)):
             "registros": registros_mapeados
         }
         
-    except HTTPException as http_err:
-        raise http_err
-        
+    except KeyError as ke:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Campo ausente nos dados: {str(ke)}"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

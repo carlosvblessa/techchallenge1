@@ -69,6 +69,7 @@ def processar_tabela_ano_duplo(df: pd.DataFrame, tipo: str):
         for i in range(2, len(colunas), 2):
             ano = colunas[i]
             temp = pd.DataFrame({
+                "id": df[colunas[0]],
                 "pais": df[colunas[1]],
                 "ano": int(ano),
                 "quantidade": pd.to_numeric(df[colunas[i]], errors="coerce"),
