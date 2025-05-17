@@ -1,100 +1,96 @@
-from pydantic import BaseModel, HttpUrl
-from typing import Literal, Optional, List
+from typing import TypeVar, Generic, List, Optional, Literal
+from pydantic import BaseModel, HttpUrl, Field, ConfigDict
 
-# Schemas Pydantic
-class HealthResponse(BaseModel):
+T = TypeVar("T")
+
+# # —— Config Base ——
+# class ConfigBase:
+#     orm_mode = True
+
+class BaseModelConfig(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+# —— Model de health check ——
+class HealthResponse(BaseModelConfig):
     status: str
     db: str
 
-class ProducaoItem(BaseModel):
-    id: int
-    id_original: int
-    control: str
+# —— Bases com restrição de ano ——
+class BaseItem1970_2023(BaseModelConfig):
+    id: int = Field(..., ge=1)
+    id_original: int = Field(..., ge=1)
+    ano: int = Field(..., ge=1970, le=2023)
+
+class BaseItem1970_2024(BaseModelConfig):
+    id: int = Field(..., ge=1)
+    ano: int = Field(..., ge=1970, le=2024)
+
+# —— Bases específicas ——
+class BaseVitviniculturaItem(BaseItem1970_2023):
+    control: Optional[str]
     produto: str
-    ano: int
+
+class BaseCultivarItem(BaseItem1970_2023):
+    control: Optional[str]
+    cultivar: str
+    volume_processado_litros: float
+class BaseComercioExteriorItem(BaseItem1970_2024):
+    pais: str
+    quantidade: float
+    valor_usd: float
+
+# —— Itens específicos ——
+class ProducaoItem(BaseVitviniculturaItem):
     producao_toneladas: float
 
-class ProducaoResponse(BaseModel):
-    arquivo: str
-    url_download: HttpUrl
-    registros: List[ProducaoItem]
-
-class ComercializacaoItem(BaseModel):
-    id: int
-    id_original: int
-    control: Optional[str] = None
-    produto: str
-    ano: int
+class ComercializacaoItem(BaseVitviniculturaItem):
     volume_comercializado: float
 
-class ComercializacaoResponse(BaseModel):
+class ProcessamentoItem(BaseCultivarItem):
+    pass
+
+class ImportacaoItem(BaseComercioExteriorItem):
+    pass
+
+class ExportacaoItem(BaseComercioExteriorItem):
+    pass
+
+class PaginatedResponse(BaseModel, Generic[T]):
     arquivo: str
     url_download: HttpUrl
-    registros: List[ComercializacaoItem]
+    registros: List[T]
 
-class ProcessamentoItem(BaseModel):
-    id: int
-    id_original: int
-    control: str
-    cultivar: str
-    ano: int
-    volume_processado_litros: float
+# —— Alias para facilitar ——
+ProducaoResponse = PaginatedResponse[ProducaoItem]
+ComercializacaoResponse = PaginatedResponse[ComercializacaoItem]
+ProcessamentoResponse = PaginatedResponse[ProcessamentoItem]
+ImportacaoResponse = PaginatedResponse[ImportacaoItem]
+ExportacaoResponse = PaginatedResponse[ExportacaoItem]
 
-class ProcessamentoResponse(BaseModel):
-    arquivo: str
-    url_download: HttpUrl
-    registros: List[ProcessamentoItem]
-
-class ImportacaoItem(BaseModel):
-    id: int
-    pais: str
-    ano: int
-    quantidade: float
-    valor_usd: float
-
-class ImportacaoResponse(BaseModel):
-    arquivo: str
-    url_download: HttpUrl
-    registros: List[ImportacaoItem]
-
-
-class ExportacaoItem(BaseModel):
-    id: int
-    pais: str
-    ano: int
-    quantidade: float
-    valor_usd: float
-
-class ExportacaoResponse(BaseModel):
-    arquivo: str
-    url_download: HttpUrl
-    registros: List[ExportacaoItem]
-
-
-class SolicitarAcessoRequest(BaseModel):
+# —— Autenticação ——
+class Credentials(BaseModelConfig):
     username: str
     password: str
 
-class MessageResponse(BaseModel):
-    mensagem: str
+class SolicitarAcessoRequest(Credentials):
+    pass
 
-class AvaliarAcessoRequest(BaseModel):
+class AdminAuthRequest(BaseModelConfig):
     admin_username: str
     admin_password: str
+class AvaliarAcessoRequest(AdminAuthRequest):
     username: str
     status_aprovacao: Literal["aprovado", "rejeitado"]
-
-class StatusAcessoResponse(BaseModel):
+class StatusAcessoResponse(BaseModelConfig):
     status: str
     mensagem: Optional[str] = None
     user_id: Optional[int] = None
     access_token: Optional[str] = None
     token_type: Optional[str] = None
 
-class AdminAuthRequest(BaseModel):
-    admin_username: str
-    admin_password: str
+class MessageResponse(BaseModelConfig):
+    mensagem: str
 
-class SolicitacaoPendente(BaseModel):
+class SolicitacaoPendente(BaseModelConfig):
     username: str
     status: str

@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.database import SessionLocal
 from app.models_usuario import Usuario
 from app.utils import create_access_token, verify_token
-from app.config import settings
+from app.config import settings, ADMIN_USERNAME, ADMIN_PASSWORD
 from typing import List
 import bcrypt
 from app.schema import (
@@ -18,9 +18,6 @@ from app.schema import (
 )
 
 router = APIRouter()
-
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin123"
 
 def get_db():
     db = SessionLocal()
@@ -54,7 +51,6 @@ def solicitar_acesso(
         raise HTTPException(status_code=400, detail="Usuário já solicitou acesso.")
     
     salt   = bcrypt.gensalt(rounds=12, prefix=b"2a")
-    #hashed = bcrypt.hashpw(data['password'].encode('utf-8'), salt)
     hashed = bcrypt.hashpw(data.password.encode('utf-8'), salt)
     
     novo = Usuario(username=data.username,
