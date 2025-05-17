@@ -3,10 +3,6 @@ from pydantic import BaseModel, HttpUrl, Field, ConfigDict
 
 T = TypeVar("T")
 
-# # —— Config Base ——
-# class ConfigBase:
-#     orm_mode = True
-
 class BaseModelConfig(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
